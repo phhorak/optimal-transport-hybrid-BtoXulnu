@@ -1,0 +1,10 @@
+plots/
+*.parquet
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.DS_Store

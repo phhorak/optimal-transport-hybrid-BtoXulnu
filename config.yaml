@@ -1,0 +1,63 @@
+# Configuration for the B → Xᵤℓν hybrid model weight computation.
+# Edit the paths and branching fractions to match your setup, then run:
+#   python compute_weights.py --config config.yaml [--plot]
+
+# "charged" for B+ → Xᵤ⁰ ℓ⁺ νₗ, "neutral" for B⁰ → Xᵤ⁻ ℓ⁺ νₗ
+mode: charged
+
+# Label used in plots for the inclusive model
+inclusive_model: DFN
+
+input:
+  inclusive: /path/to/inclusive.root   # also accepts .parquet
+  resonant:  /path/to/resonant.root
+
+  # Column names — adjust if your files use different names
+  pplus_col:    genPplus
+  pminus_col:   genPminus
+  pdg_col:      X_gen_PDG
+  ff_weight_col: FF_weight   # set to a column of ones if not applicable
+
+# Branching fractions used for the hybrid normalization.
+# Values are absolute (not ×10^-4). PDG codes are integers.
+# Only the mode selected above is used.
+branching_fractions:
+  charged:                   # B+ → Xᵤ⁰ ℓ⁺ νₗ exclusive modes
+    111: 7.8e-4              # π⁰
+    221: 3.5e-4              # η
+    113: 15.8e-4             # ρ⁰
+    223: 11.9e-4             # ω
+    331: 2.4e-4              # η'
+  neutral:                   # B⁰ → Xᵤ⁻ ℓ⁺ νₗ exclusive modes
+    211: 15.0e-4             # π±
+    213: 29.4e-4             # ρ±
+
+# Inclusive B(B → Xᵤ ℓ ν) branching fraction (full phase space).
+inclusive_branching_fraction: 19.2e-4
+
+optimal_transport:
+  bin_width: 0.08            # GeV — grid spacing in (P+, P-) space
+  pminus_range: [0, 5.31]   # GeV
+  pplus_range:  [0, 3.01]   # GeV
+
+  # Spatial window restricting which source-target bin pairs can be connected.
+  # Format: [dP+_min, dP+_max, dP-_min, dP-_max] in GeV.
+  # Set to null to allow all connections (recommended for first use).
+  window: null
+
+  # Entropy regularization. 0 = exact Earth Mover's Distance (recommended).
+  # Values > 0 use the Sinkhorn algorithm and produce smoother transport plans
+  # at the cost of slightly worse moment conservation.
+  lambda_reg: 0
+
+# Binning used for the conventional bin-by-bin hybrid (for comparison).
+# These match the binning used in recent Belle II analyses.
+conventional_hybrid:
+  binning:
+    genq2:       [0, 2.5, 5, 7.5, 10, 12.5, 15, 20, 25]
+    gen_lep_E_B: [0, 0.5, 1, 1.25, 1.5, 1.75, 2, 2.25, 3]
+    genMx:       [0, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5]
+
+output:
+  weights_file: hybrid_weights.parquet
+  plots_dir: plots/
