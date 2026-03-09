@@ -5,7 +5,7 @@ This repository accompanies the paper
 > *Mapping quark-level kinematics to hadrons in a new hybrid model of semileptonic B meson decays*
 > P. Horak, R. Kowalewski, T. Martinov (2025)
 
-and provides a clean implementation of the optimal transport (OT) hybrid method for constructing simulation models of inclusive semileptonic B → Xᵤℓν decays.
+and provides an implementation of the optimal transport (OT) hybrid method for constructing simulation models of inclusive semileptonic B → Xᵤℓν decays.
 
 ## Background
 
