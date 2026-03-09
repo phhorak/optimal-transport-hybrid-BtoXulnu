@@ -49,15 +49,17 @@ The script expects two simulation samples — an inclusive HQE sample and a comb
 
 ## Output
 
-The output parquet file contains one row per inclusive event with these columns added:
+The primary output is `hybrid_weights.csv` — a weight table with one row per (P+, P-) bin:
 
 | Column | Description |
 |--------|-------------|
-| `ot_hybrid_weight` | OT hybrid reweight — multiply by `total_weight` to get the final hybrid weight |
-| `conventional_hybrid_weight` | Bin-by-bin hybrid reweight (for comparison) |
-| `total_weight` | Normalization weight = `branching_fraction_weight × FF_weight` |
+| `pplus_low` | Lower edge of the P+ bin [GeV] |
+| `pplus_high` | Upper edge of the P+ bin [GeV] |
+| `pminus_low` | Lower edge of the P- bin [GeV] |
+| `pminus_high` | Upper edge of the P- bin [GeV] |
+| `ot_hybrid_weight` | Fraction of inclusive events in this bin that remain after resonances are placed |
 
-The final event weight for the hybrid sample is `total_weight × ot_hybrid_weight`. The resonant events keep their `total_weight` unchanged.
+To apply the weights to your events, find each event's (P+, P-) bin and multiply its existing weight by `ot_hybrid_weight`. Values close to 1 mean the bin is unaffected by resonances; values close to 0 mean it is fully covered. The resonant events keep their own weights unchanged.
 
 ## Config reference
 

@@ -7,8 +7,15 @@ Usage:
 
 Reads inclusive and resonant simulation samples, computes normalization weights,
 then runs both the optimal transport hybrid and the conventional bin-by-bin hybrid.
-Per-event weight columns are appended to the inclusive DataFrame and saved as a
-parquet file. Pass --plot to also produce kinematic distribution and moment plots.
+
+The primary output is a CSV weight table with one row per (P+, P-) bin:
+
+    pplus_low, pplus_high, pminus_low, pminus_high, ot_hybrid_weight
+
+To apply the weights to your events, look up each event's (P+, P-) bin and
+multiply its existing weight by the corresponding ot_hybrid_weight value.
+
+Pass --plot to also produce kinematic distribution and moment comparison plots.
 """
 
 import argparse
@@ -239,13 +246,29 @@ def main():
     )
 
     # ------------------------------------------------------------------
-    # Save output
+    # Save output: 2D weight map as CSV (one row per bin)
     # ------------------------------------------------------------------
-    os.makedirs(os.path.dirname(out_cfg["weights_file"]) or ".", exist_ok=True)
-    out_cols = ["ot_hybrid_weight", "conventional_hybrid_weight", "total_weight"]
-    out_cols = [c for c in out_cols if c in df_incl.columns]
-    df_incl[out_cols].to_parquet(out_cfg["weights_file"])
-    print(f"Saved weights to {out_cfg['weights_file']}")
+    bw = ot_cfg["bin_width"]
+    pp_edges = np.arange(ot_cfg["pplus_range"][0],  ot_cfg["pplus_range"][1],  bw)
+    pm_edges = np.arange(ot_cfg["pminus_range"][0], ot_cfg["pminus_range"][1], bw)
+
+    rows = []
+    for i, pp_lo in enumerate(pp_edges):
+        for j, pm_lo in enumerate(pm_edges):
+            if i < reweight_map.shape[0] and j < reweight_map.shape[1]:
+                rows.append({
+                    "pplus_low":        round(pp_lo, 6),
+                    "pplus_high":       round(pp_lo + bw, 6),
+                    "pminus_low":       round(pm_lo, 6),
+                    "pminus_high":      round(pm_lo + bw, 6),
+                    "ot_hybrid_weight": reweight_map[i, j],
+                })
+
+    weight_table = pd.DataFrame(rows)
+    out_path = out_cfg["weights_file"]
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    weight_table.to_csv(out_path, index=False)
+    print(f"Saved {len(weight_table)} bin weights to {out_path}")
 
     # ------------------------------------------------------------------
     # Optional plots
