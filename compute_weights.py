@@ -115,12 +115,12 @@ def plot_distributions(df_incl, df_excl, mode, incl_model, plots_dir):
         axr = fig.add_subplot(gs[2 * (i // ncols) + 1, i % ncols], sharex=ax)
 
         h_dfn  = np.histogram(df_incl[var], bins=bins,
-                               weights=df_incl["total_weight"])[0]
+                               weights=df_incl["norm_weight"])[0]
         h_incl = np.histogram(df_incl[var], bins=bins,
-                               weights=df_incl["total_weight"] * df_incl["ot_hybrid_weight"])[0]
+                               weights=df_incl["norm_weight"] * df_incl["ot_hybrid_weight"])[0]
         h_excl_list = [
             np.histogram(df_excl[var][m], bins=bins,
-                         weights=df_excl["total_weight"][m])[0]
+                         weights=df_excl["norm_weight"][m])[0]
             for m in masks.values()
         ]
 
@@ -191,7 +191,7 @@ def main():
     pplus_col  = in_cfg.get("pplus_col",  "genPplus")
     pminus_col = in_cfg.get("pminus_col", "genPminus")
     pdg_col    = in_cfg.get("pdg_col",    "X_gen_PDG")
-    ff_col     = in_cfg.get("ff_weight_col", "FF_weight")
+    input_weight_col = in_cfg.get("input_weight_col", "input_weight")
 
     # ------------------------------------------------------------------
     # Normalization
@@ -202,7 +202,7 @@ def main():
         branching_fractions=bfs,
         inclusive_bf=incl_bf,
         pdg_col=pdg_col,
-        ff_weight_col=ff_col,
+        input_weight_col=input_weight_col,
     )
 
     # ------------------------------------------------------------------
@@ -239,7 +239,7 @@ def main():
     print("Computing conventional bin-by-bin weights ...")
     binning = {k: np.array(v) for k, v in conv_cfg["binning"].items()}
     conv_weights_arr = compute_conventional_weights(
-        df_incl, df_excl, binning, weight_col="total_weight",
+        df_incl, df_excl, binning, weight_col="norm_weight",
     )
     df_incl["conventional_hybrid_weight"] = apply_bin_weights(
         df_incl, binning, conv_weights_arr,
@@ -290,22 +290,22 @@ def main():
 
         kwargs = dict(df_incl=df_incl, df_excl=df_excl, varlist=varlist, n=4)
 
-        mom_ref     = compute_all_moments(**kwargs, incl_weight_col="total_weight",
+        mom_ref     = compute_all_moments(**kwargs, incl_weight_col="norm_weight",
                                           excl_weight_col="_null", central=False)
-        mom_ref_cen = compute_all_moments(**kwargs, incl_weight_col="total_weight",
+        mom_ref_cen = compute_all_moments(**kwargs, incl_weight_col="norm_weight",
                                           excl_weight_col="_null", central=True)
 
         mom_ot      = compute_all_moments(**kwargs, incl_weight_col="ot_hybrid_weight",
-                                          excl_weight_col="total_weight", central=False)
+                                          excl_weight_col="norm_weight", central=False)
         mom_ot_cen  = compute_all_moments(**kwargs, incl_weight_col="ot_hybrid_weight",
-                                          excl_weight_col="total_weight", central=True)
+                                          excl_weight_col="norm_weight", central=True)
 
-        # conventional: reuse the existing total_weight × conventional_hybrid_weight product
-        df_incl["_conv_wt"] = df_incl["total_weight"] * df_incl["conventional_hybrid_weight"]
+        # conventional: reuse the existing norm_weight × conventional_hybrid_weight product
+        df_incl["_conv_wt"] = df_incl["norm_weight"] * df_incl["conventional_hybrid_weight"]
         mom_conv    = compute_all_moments(**kwargs, incl_weight_col="_conv_wt",
-                                          excl_weight_col="total_weight", central=False)
+                                          excl_weight_col="norm_weight", central=False)
         mom_conv_cen= compute_all_moments(**kwargs, incl_weight_col="_conv_wt",
-                                          excl_weight_col="total_weight", central=True)
+                                          excl_weight_col="norm_weight", central=True)
 
         print_moment_errors(mom_ot, mom_conv, mom_ref,
                             mom_ot_cen, mom_conv_cen, mom_ref_cen, varlist)

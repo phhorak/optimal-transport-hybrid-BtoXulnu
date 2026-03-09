@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def compute_conventional_weights(df_incl, df_excl, binning, weight_col="total_weight"):
+def compute_conventional_weights(df_incl, df_excl, binning, weight_col="norm_weight"):
     """
     Compute bin-by-bin hybrid weights as (H_inc - H_exc) / H_inc in N-dimensional
     phase space. This is the standard method used in existing analyses.

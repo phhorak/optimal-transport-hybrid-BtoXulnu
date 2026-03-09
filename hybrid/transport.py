@@ -6,7 +6,7 @@ import ot
 
 
 def build_phase_space_grid(df_incl, df_excl, bin_width, pminus_range, pplus_range,
-                           incl_weight_col="total_weight", excl_weight_col="total_weight",
+                           incl_weight_col="norm_weight", excl_weight_col="norm_weight",
                            pplus_col="genPplus", pminus_col="genPminus"):
     """
     Histogram inclusive and resonant samples onto a 2D (P+, P-) grid.

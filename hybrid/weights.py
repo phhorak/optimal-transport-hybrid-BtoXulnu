@@ -2,7 +2,7 @@ import numpy as np
 
 
 def compute_normalization(df_incl, df_excl, branching_fractions, inclusive_bf,
-                          pdg_col="X_gen_PDG", ff_weight_col="FF_weight"):
+                          pdg_col="X_gen_PDG", input_weight_col="input_weight"):
     """
     Compute per-event normalization weights so that the resonant and inclusive
     samples can be combined into a single hybrid model.
@@ -14,9 +14,9 @@ def compute_normalization(df_incl, df_excl, branching_fractions, inclusive_bf,
     This factor is applied uniformly to all exclusive events (independent of
     PDG code, since the exclusive sample is pre-mixed by EvtGen). Inclusive
     events get weight 1 from this factor. Both samples are further multiplied
-    by their FF_weight column (set to 1 if form-factor corrections are absent).
+    by their input_weight column (e.g. form-factor corrections; set to 1 if absent).
 
-    The resulting column "total_weight" is added in-place to both DataFrames.
+    The resulting column "norm_weight" is added in-place to both DataFrames.
 
     Parameters
     ----------
@@ -31,8 +31,10 @@ def compute_normalization(df_incl, df_excl, branching_fractions, inclusive_bf,
         Inclusive B(B -> Xu l nu) branching fraction.
     pdg_col : str
         Column name for the hadronic system PDG code.
-    ff_weight_col : str
-        Column name for form-factor weights (1 if not applicable).
+    input_weight_col : str
+        Optional per-event weight column already present in the DataFrames
+        (e.g. form-factor corrections). If the column does not exist, it is
+        treated as 1 for all events.
     """
     sum_excl_bf = sum(branching_fractions.values())
     denom = sum_excl_bf + inclusive_bf
@@ -41,13 +43,9 @@ def compute_normalization(df_incl, df_excl, branching_fractions, inclusive_bf,
     n_excl = len(df_excl)
     excl_norm = (n_incl / n_excl) * (1.0 - inclusive_bf / denom)
 
-    df_incl["branching_fraction_weight"] = 1.0
-    df_excl["branching_fraction_weight"] = excl_norm
-
-    for df in (df_incl, df_excl):
-        if ff_weight_col not in df.columns:
-            df[ff_weight_col] = 1.0
-        df["total_weight"] = df["branching_fraction_weight"] * df[ff_weight_col]
+    for df, bf_factor in ((df_incl, 1.0), (df_excl, excl_norm)):
+        input_w = df[input_weight_col].values if input_weight_col in df.columns else 1.0
+        df["norm_weight"] = bf_factor * input_w
 
 
 def apply_ot_weights(df, reweight_map, bin_width,

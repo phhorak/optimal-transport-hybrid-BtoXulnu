@@ -13,10 +13,10 @@ input:
   resonant:  /path/to/resonant.root
 
   # Column names — adjust if your files use different names
-  pplus_col:    genPplus
-  pminus_col:   genPminus
-  pdg_col:      X_gen_PDG
-  ff_weight_col: FF_weight   # set to a column of ones if not applicable
+  pplus_col:        genPplus
+  pminus_col:       genPminus
+  pdg_col:          X_gen_PDG
+  input_weight_col: input_weight   # optional per-event weight (e.g. form-factor corrections); omit if not applicable
 
 # Branching fractions used for the hybrid normalization.
 # Values are absolute (not ×10^-4). PDG codes are integers.

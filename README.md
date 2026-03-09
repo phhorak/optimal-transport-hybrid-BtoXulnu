@@ -28,7 +28,7 @@ The main dependency for the OT solver is [POT](https://pythonot.github.io/) (Pyt
    ```bash
    python compute_weights.py --config config.yaml
    ```
-3. This produces `hybrid_weights.parquet` containing per-event `ot_hybrid_weight` and `conventional_hybrid_weight` columns for your inclusive sample. Pass `--plot` to also generate kinematic distribution and moment comparison plots.
+3. This produces `hybrid_weights.csv` — a table of OT hybrid weights indexed by (P+, P-) bin edges. Pass `--plot` to also generate kinematic distribution and moment comparison plots.
 
 See `example_notebook.ipynb` for a step-by-step walkthrough.
 
@@ -41,7 +41,7 @@ The script expects two simulation samples — an inclusive HQE sample and a comb
 | `genPplus` | P+ = E_X + \|p_X\| in the B rest frame [GeV] |
 | `genPminus` | P- = E_X − \|p_X\| in the B rest frame [GeV] |
 | `X_gen_PDG` | PDG code of the hadronic system |
-| `FF_weight` | Form-factor weight (set to 1 if not applicable) |
+| `input_weight` | Optional per-event weight (e.g. form-factor corrections). Column name is configurable; omit entirely if not needed. |
 | `genMx` | Hadronic system invariant mass [GeV] |
 | `genq2` | Lepton-neutrino invariant mass squared [GeV²] |
 | `gen_lep_E_B` | Lepton energy in B rest frame [GeV] |
