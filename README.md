@@ -49,7 +49,7 @@ input:
   resonant:  /path/to/BplusToExclenu.pq
 ```
 
-then either run the CLI:
+then either run the script:
 
 ```bash
 python compute_weights.py --config config.yaml --plot
