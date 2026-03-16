@@ -63,8 +63,8 @@ The script expects two simulation samples — an inclusive HQE sample and a comb
 
 | Column | Description |
 |--------|-------------|
-| `genPplus` | P+ = E_X + \|p_X\| in the B rest frame [GeV] |
-| `genPminus` | P- = E_X − \|p_X\| in the B rest frame [GeV] |
+| `genPplus` | P+ = E_X - \|p_X\| in the B rest frame [GeV] |
+| `genPminus` | P- = E_X + \|p_X\| in the B rest frame [GeV] |
 | `X_gen_PDG` | PDG code of the hadronic system |
 | `input_weight` | Optional per-event weight (e.g. form-factor corrections). Column name is configurable; omit entirely if not needed. |
 | `genMx` | Hadronic system invariant mass [GeV] |
