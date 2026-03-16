@@ -18,6 +18,10 @@ input:
   pdg_col:          X_gen_PDG
   input_weight_col: input_weight   # optional per-event weight (e.g. form-factor corrections); omit if not applicable
 
+  # If your files contain background events, set this to the column whose value
+  # must be > 0 to select signal. Leave unset (or null) if no filter is needed.
+  signal_filter_col: Bsig_gen_PDG
+
 # Branching fractions used for the hybrid normalization.
 # Values are absolute (not ×10^-4). PDG codes are integers.
 # Only the mode selected above is used.

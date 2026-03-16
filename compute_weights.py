@@ -182,11 +182,19 @@ def main():
     # ------------------------------------------------------------------
     # Load data
     # ------------------------------------------------------------------
+    signal_col = in_cfg.get("signal_filter_col")
+
     print("Loading inclusive sample ...")
     df_incl = load_dataframe(in_cfg["inclusive"])
 
     print("Loading resonant sample ...")
     df_excl = load_dataframe(in_cfg["resonant"])
+
+    if signal_col:
+        df_incl = df_incl[df_incl[signal_col] > 0].reset_index(drop=True)
+        df_excl = df_excl[df_excl[signal_col] > 0].reset_index(drop=True)
+        print(f"After signal filter ({signal_col} > 0): "
+              f"{len(df_incl):,} inclusive, {len(df_excl):,} resonant")
 
     pplus_col  = in_cfg.get("pplus_col",  "genPplus")
     pminus_col = in_cfg.get("pminus_col", "genPminus")
