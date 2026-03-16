@@ -39,6 +39,8 @@ The simulation samples used in the paper are archived on Zenodo:
 > **Simulation samples for "Mapping quark-level kinematics to hadrons in a new hybrid model of semileptonic B meson decays"**
 > [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19055004.svg)](https://doi.org/10.5281/zenodo.19055004)
 
+The EvtGen decay files used to generate all samples in the paper (B⁺ and B⁰, DFN and BLNP) are included in the Zenodo record alongside the simulation samples.
+
 Download the parquet files, set the paths in `config.yaml`:
 
 ```yaml
