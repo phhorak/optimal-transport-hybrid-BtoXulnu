@@ -1,6 +1,5 @@
 plots/
 *.parquet
-hybrid_weights.csv
 __pycache__/
 *.pyc
 *.pyo
