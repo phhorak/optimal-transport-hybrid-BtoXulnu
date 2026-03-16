@@ -39,15 +39,21 @@ The simulation samples used in the paper are archived on Zenodo:
 > **Simulation samples for "Mapping quark-level kinematics to hadrons in a new hybrid model of semileptonic B meson decays"**
 > [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19055004.svg)](https://doi.org/10.5281/zenodo.19055004)
 
-Download the parquet files and point the notebook at them:
+Download the parquet files, set the paths in `config.yaml`:
 
-```python
-PATH_INCLUSIVE = "/path/to/BplusToXuenu_central.pq"
-PATH_RESONANT  = "/path/to/BplusToExclenu.pq"
-MODE = "charged"
+```yaml
+input:
+  inclusive: /path/to/BplusToXuenu_central.pq
+  resonant:  /path/to/BplusToExclenu.pq
 ```
 
-Then run all cells of `example_notebook.ipynb` in order. The moment comparison table and plots will match the paper exactly.
+then either run the CLI:
+
+```bash
+python compute_weights.py --config config.yaml --plot
+```
+
+or open `example_notebook.ipynb`, set `PATH_INCLUSIVE` and `PATH_RESONANT` in the configuration cell, and run all cells in order. The moment comparison table and plots will match the paper exactly.
 
 ## Input format
 
