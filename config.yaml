@@ -64,5 +64,5 @@ conventional_hybrid:
     genMx:       [0, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5]
 
 output:
-  weights_file: hybrid_weights.csv
+  weights_file: hybrid_weights_BplusDFN.csv
   plots_dir: plots/
