@@ -32,6 +32,23 @@ The main dependency for the OT solver is [POT](https://pythonot.github.io/) (Pyt
 
 See `example_notebook.ipynb` for a step-by-step walkthrough.
 
+## Reproducing the paper results
+
+The simulation samples used in the paper are archived on Zenodo:
+
+> **Simulation samples for "Mapping quark-level kinematics to hadrons in a new hybrid model of semileptonic B meson decays"**
+> [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19055004.svg)](https://doi.org/10.5281/zenodo.19055004)
+
+Download the parquet files and point the notebook at them:
+
+```python
+PATH_INCLUSIVE = "/path/to/BplusToXuenu_central.pq"
+PATH_RESONANT  = "/path/to/BplusToExclenu.pq"
+MODE = "charged"
+```
+
+Then run all cells of `example_notebook.ipynb` in order. The moment comparison table and plots will match the paper exactly.
+
 ## Input format
 
 The script expects two simulation samples — an inclusive HQE sample and a combined resonant sample — in ROOT or parquet format. The following columns must be present (names are configurable in `config.yaml`):
