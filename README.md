@@ -26,7 +26,7 @@ The main dependency for the OT solver is [POT](https://pythonot.github.io/) (Pyt
 1. Edit `config.yaml` — set the paths to your simulation files and adjust the branching fractions if needed.
 2. Run the script:
    ```bash
-   python compute_weights.py --config config.yaml
+   python3 compute_weights.py --config config.yaml
    ```
 3. This produces `hybrid_weights.csv` — a table of OT hybrid weights indexed by (P+, P-) bin edges. Pass `--plot` to also generate kinematic distribution and moment comparison plots.
 
@@ -52,7 +52,7 @@ input:
 then either run the script:
 
 ```bash
-python compute_weights.py --config config.yaml --plot
+python3 compute_weights.py --config config.yaml --plot
 ```
 
 or open `example_notebook.ipynb`, set `PATH_INCLUSIVE` and `PATH_RESONANT` in the configuration cell, and run all cells in order. The moment comparison table and plots will match the paper exactly.
