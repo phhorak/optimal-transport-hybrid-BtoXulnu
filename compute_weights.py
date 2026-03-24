@@ -67,28 +67,78 @@ def load_config(path):
 # Plotting (only imported / used when --plot is passed)
 # ---------------------------------------------------------------------------
 
+def _plot_ratio(axr, bottom, h_dfn, bins, i):
+    """Ratio panel: grey shading on first plot, red arrows for out-of-range points."""
+    ratio = np.divide(bottom, h_dfn, out=np.ones_like(bottom), where=h_dfn > 0)
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    if i == 0:
+        axr.axvspan(bins[0], 1.25, color="grey", alpha=0.3, zorder=0)
+        mask = bins[:-1] >= 1.25
+        axr.plot(bin_centers[mask], ratio[mask], "k.", markersize=4)
+    else:
+        axr.plot(bin_centers, ratio, "k.", markersize=4)
+        out_range = (ratio < 0.85) | (ratio > 1.15)
+        for x, y in zip(bin_centers[out_range], ratio[out_range]):
+            if y > 1.15:
+                axr.annotate("", xy=(x, 1.15), xytext=(x, 1.05),
+                             arrowprops=dict(arrowstyle="Simple,head_length=.3,head_width=.2,tail_width=.05",
+                                             color="r", alpha=0.5, lw=1))
+            else:
+                axr.annotate("", xy=(x, 0.85), xytext=(x, 0.95),
+                             arrowprops=dict(arrowstyle="Simple,head_length=.3,head_width=.2,tail_width=.05",
+                                             color="r", alpha=0.5, lw=1))
+    axr.axhline(1.0, color="r", linestyle="--", lw=1)
+    axr.set_ylim(0.85, 1.15)
+    axr.set_ylabel("Hybrid/DFN")
+    axr.grid(alpha=0.3)
+
+
+def _set_axis_spacing(axes_main, axes_ratio, ncols):
+    """Custom tight positioning matching paper layout."""
+    n_rows = (len(axes_main) + ncols - 1) // ncols
+    vspace, hspace = 0.10, 0.07
+    left_margin, right_margin = 0.06, 0.03
+    top_margin, bottom_margin = 0.05, 0.05
+    total_h = 1 - top_margin - bottom_margin
+    main_height  = total_h * 0.65
+    ratio_height = total_h * 0.15
+    gap          = total_h * 0.05
+    avail_w = 1 - left_margin - right_margin
+    subplot_w = (avail_w - hspace * (ncols - 1)) / ncols
+    row_h = main_height + gap + ratio_height
+    for row in range(n_rows):
+        for col in range(ncols):
+            idx = row * ncols + col
+            if idx >= len(axes_main):
+                break
+            top_row = 1 - top_margin - row * (row_h + vspace)
+            left_col = left_margin + col * (subplot_w + hspace)
+            axes_main[idx].set_position([left_col, top_row - main_height, subplot_w, main_height])
+            axes_ratio[idx].set_position([left_col, top_row - main_height - gap - ratio_height,
+                                          subplot_w, ratio_height])
+
+
 def plot_distributions(df_incl, df_excl, mode, incl_model, plots_dir):
     """Stack plot of kinematic variables with hybrid / DFN ratio panel."""
     from plothist import get_color_palette
     import matplotlib.pyplot as plt
-    from matplotlib.gridspec import GridSpec
 
     os.makedirs(plots_dir, exist_ok=True)
 
     variables = [
-        ("genMx",       np.linspace(0, 3.51, 50),  r"$M_X$ [GeV]"),
-        ("gen_lep_E_B", np.linspace(0, 2.65, 50),  r"$E_\ell^B$ [GeV]"),
-        ("genq2",       np.linspace(0, 25.01, 50), r"$q^2$ [GeV$^2$]"),
-        ("genCosThetaL",np.linspace(-1, 1, 50),    r"$\cos\theta_\ell$"),
+        ("genMx",        np.linspace(0, 3.50, 36), r"$M_X$ [GeV]"),
+        ("gen_lep_E_B",  np.linspace(0, 2.65, 54), r"$E_\ell^B$ [GeV]"),
+        ("genq2",        np.linspace(0, 25,   51), r"$q^2$ [GeV$^2$]"),
+        ("genCosThetaL", np.linspace(-1, 1,   50), r"$\cos\theta_\ell$"),
     ]
 
     if mode == "charged":
         masks = {
-            r"$\pi^0$":  df_excl["X_gen_PDG"].abs() == 111,
-            r"$\eta$":   df_excl["X_gen_PDG"].abs() == 221,
-            r"$\rho^0$": df_excl["X_gen_PDG"].abs() == 113,
-            r"$\omega$": df_excl["X_gen_PDG"].abs() == 223,
-            r"$\eta'$":  df_excl["X_gen_PDG"].abs() == 331,
+            r"$\pi^0$":  df_excl["X_gen_PDG"] == 111,
+            r"$\eta$":   df_excl["X_gen_PDG"] == 221,
+            r"$\rho^0$": df_excl["X_gen_PDG"] == 113,
+            r"$\omega$": df_excl["X_gen_PDG"] == 223,
+            r"$\eta'$":  df_excl["X_gen_PDG"] == 331,
         }
     else:
         masks = {
@@ -104,50 +154,53 @@ def plot_distributions(df_incl, df_excl, mode, incl_model, plots_dir):
     all_labels = ["Incl leftover"] + list(masks.keys())
     all_colors = [rgba(0)] + [rgba(j + 1) for j in range(len(masks))]
 
-    ncols = 2
-    nrows = (len(variables) + 1) // ncols
-    fig = plt.figure(figsize=(14, 6 * nrows))
-    gs  = GridSpec(2 * nrows, ncols, height_ratios=[4, 1] * nrows,
-                   hspace=0.12, wspace=0.28, figure=fig)
+    ncols = 4
+    fig = plt.figure(figsize=(23, 5))
+    axes_main, axes_ratio = [], []
 
     for i, (var, bins, xlabel) in enumerate(variables):
-        ax  = fig.add_subplot(gs[2 * (i // ncols), i % ncols])
-        axr = fig.add_subplot(gs[2 * (i // ncols) + 1, i % ncols], sharex=ax)
+        ax  = fig.add_subplot(len(variables) * 2, ncols, i + 1)
+        axr = fig.add_subplot(len(variables) * 2, ncols, i + 1 + ncols, sharex=ax)
+        axes_main.append(ax)
+        axes_ratio.append(axr)
 
         h_dfn  = np.histogram(df_incl[var], bins=bins,
-                               weights=df_incl["norm_weight"])[0]
+                               weights=df_incl["norm_weight"])[0].astype(float)
         h_incl = np.histogram(df_incl[var], bins=bins,
-                               weights=df_incl["norm_weight"] * df_incl["ot_hybrid_weight"])[0]
+                               weights=df_incl["norm_weight"] * df_incl["ot_hybrid_weight"])[0].astype(float)
         h_excl_list = [
             np.histogram(df_excl[var][m], bins=bins,
-                         weights=df_excl["norm_weight"][m])[0]
+                         weights=df_excl["norm_weight"][m])[0].astype(float)
             for m in masks.values()
         ]
 
-        bottom = np.zeros_like(h_incl, dtype=float)
+        bottom = np.zeros(len(bins) - 1)
         for hdat, lab, col in zip([h_incl] + h_excl_list, all_labels, all_colors):
             ax.bar(bins[:-1], hdat, width=np.diff(bins), bottom=bottom,
                    align="edge", color=col, edgecolor="none", label=lab)
             bottom += hdat
 
         mode_label = r"$B^\pm$" if mode == "charged" else r"$B^0$"
-        ax.step(bins[:-1], bottom, where="post", color="k", lw=1.2, label="Hybrid")
-        ax.step(bins[:-1], h_dfn,  where="post", color="r", lw=1.1, label=incl_model)
-        if i == 0:
-            ax.legend(fontsize=14)
+        ax.stairs(bottom, bins, color="#A0A0A0", lw=1.7, label="Hybrid")
+        ax.stairs(h_dfn,  bins, color="#000000", lw=1.7, label=incl_model,
+                  linestyle=(0, (5, 1)))
+
         ax.text(0.05, 0.95, mode_label, transform=ax.transAxes,
-                va="top", ha="left", fontsize=16)
+                va="top", ha="left", fontsize=20)
         ax.set_ylabel("Events")
         ax.grid(alpha=0.3)
         ax.tick_params(labelbottom=False)
+        lo, hi = ax.get_ylim()
+        if i == 0:
+            ax.legend(fontsize=11, ncol=2)
+            ax.set_ylim(lo, hi * 1.5)
+        else:
+            ax.set_ylim(lo, hi * 1.2)
 
-        ratio = np.divide(bottom, h_dfn, out=np.ones_like(bottom), where=h_dfn > 0)
-        axr.plot(0.5 * (bins[:-1] + bins[1:]), ratio, "k.", markersize=4)
-        axr.axhline(1.0, color="r", linestyle="--", lw=1)
-        axr.set_ylim(0.85, 1.15)
-        axr.set_ylabel("Hybrid/DFN")
+        _plot_ratio(axr, bottom, h_dfn, bins, i)
         axr.set_xlabel(xlabel)
-        axr.grid(alpha=0.3)
+
+    _set_axis_spacing(axes_main, axes_ratio, ncols)
 
     plt.savefig(os.path.join(plots_dir, f"distributions_{mode}.pdf"),
                 bbox_inches="tight", facecolor="white")
