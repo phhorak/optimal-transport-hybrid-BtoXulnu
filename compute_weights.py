@@ -179,27 +179,36 @@ def main():
     bfs         = {int(k): v for k, v in cfg["branching_fractions"][mode].items()}
     incl_bf     = cfg["inclusive_branching_fraction"]
 
+    pplus_col  = in_cfg.get("pplus_col",  "genPplus")
+    pminus_col = in_cfg.get("pminus_col", "genPminus")
+    pdg_col    = in_cfg.get("pdg_col",    "X_gen_PDG")
+    input_weight_col = in_cfg.get("input_weight_col", "input_weight")
+
     # ------------------------------------------------------------------
-    # Load data
+    # Load data — only the columns actually needed
     # ------------------------------------------------------------------
     signal_col = in_cfg.get("signal_filter_col")
 
+    needed_cols = list(dict.fromkeys(filter(None, [
+        signal_col,
+        pplus_col,
+        pminus_col,
+        pdg_col,
+        *conv_cfg["binning"].keys(),
+        *(["genCosThetaL"] if args.plot else []),
+    ])))
+
     print("Loading inclusive sample ...")
-    df_incl = load_dataframe(in_cfg["inclusive"])
+    df_incl = load_dataframe(in_cfg["inclusive"], columns=needed_cols)
 
     print("Loading resonant sample ...")
-    df_excl = load_dataframe(in_cfg["resonant"])
+    df_excl = load_dataframe(in_cfg["resonant"], columns=needed_cols)
 
     if signal_col:
         df_incl = df_incl[df_incl[signal_col] > 0].reset_index(drop=True)
         df_excl = df_excl[df_excl[signal_col] > 0].reset_index(drop=True)
         print(f"After signal filter ({signal_col} > 0): "
               f"{len(df_incl):,} inclusive, {len(df_excl):,} resonant")
-
-    pplus_col  = in_cfg.get("pplus_col",  "genPplus")
-    pminus_col = in_cfg.get("pminus_col", "genPminus")
-    pdg_col    = in_cfg.get("pdg_col",    "X_gen_PDG")
-    input_weight_col = in_cfg.get("input_weight_col", "input_weight")
 
     # ------------------------------------------------------------------
     # Normalization
