@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 
 def compute_moment(data, weights, n, central=True):

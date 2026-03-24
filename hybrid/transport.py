@@ -95,13 +95,17 @@ def solve_ot(Psource, Ptarget, bin_width, window=None, lambda_reg=0, verbose=Fal
         )
 
     # Append a sink node to absorb the excess inclusive mass.
-    tgt_coords  = np.vstack([tgt_coords, [500, 500]])
+    # Coordinate 500 places it far outside the physical grid.
+    _SINK_COORD = 500
+    tgt_coords  = np.vstack([tgt_coords, [_SINK_COORD, _SINK_COORD]])
     tgt_weights = np.append(tgt_weights, mismatch)
 
     # Build cost matrix: Euclidean distance in bin-index space.
+    # _INFEASIBLE_COST is used to block connections outside the window.
+    _INFEASIBLE_COST = 9_999_999.0
     n_src = len(src_coords)
     n_tgt = len(tgt_coords)
-    M = np.full((n_src, n_tgt), 9_999_999.0)
+    M = np.full((n_src, n_tgt), _INFEASIBLE_COST)
 
     src_r = src_coords[:, 0].astype(int)
     src_c = src_coords[:, 1].astype(int)
@@ -124,7 +128,7 @@ def solve_ot(Psource, Ptarget, bin_width, window=None, lambda_reg=0, verbose=Fal
             (tgt_r >= src_r[:, None] + bottom) & (tgt_r <= src_r[:, None] + top) &
             (tgt_c >= src_c[:, None] + left)   & (tgt_c <= src_c[:, None] + right)
         )
-        M[:, :-1] = np.where(valid, np.sqrt(dr**2 + dc**2), 9_999_999.0)
+        M[:, :-1] = np.where(valid, np.sqrt(dr**2 + dc**2), _INFEASIBLE_COST)
 
     M[:, -1] = 0.0  # sink is free to receive
 
@@ -147,6 +151,14 @@ def solve_ot(Psource, Ptarget, bin_width, window=None, lambda_reg=0, verbose=Fal
     return G, src_coords, Psource.shape
 
 
+def _extract_sink_mass(G, src_coords, shape):
+    """Return a 2D array of mass routed to the sink node for each source bin."""
+    remaining = np.zeros(shape)
+    for i, (r, c) in enumerate(src_coords.astype(int)):
+        remaining[r, c] = G[i, -1]
+    return remaining
+
+
 def extract_reweights(G, src_coords, Psource_shape, Psource):
     """
     Extract the per-bin reweight map from the transport solution.
@@ -157,10 +169,7 @@ def extract_reweights(G, src_coords, Psource_shape, Psource):
 
     Returns a 2D array of the same shape as Psource.
     """
-    sink_col = G.shape[1] - 1
-    remaining = np.zeros(Psource_shape)
-    for i, (r, c) in enumerate(src_coords.astype(int)):
-        remaining[r, c] = G[i, sink_col]
+    remaining = _extract_sink_mass(G, src_coords, Psource_shape)
     return remaining / np.maximum(Psource, 1)
 
 
@@ -169,10 +178,7 @@ def plot_sink_distribution(G, src_coords, Psource_shape, ax=None):
     Diagnostic plot of the mass routed to the sink (i.e. the inclusive leftover
     before normalization). Useful for checking the transport solution.
     """
-    sink_col = G.shape[1] - 1
-    remaining = np.zeros(Psource_shape)
-    for i, (r, c) in enumerate(src_coords.astype(int)):
-        remaining[r, c] = G[i, sink_col]
+    remaining = _extract_sink_mass(G, src_coords, Psource_shape)
 
     if ax is None:
         _, ax = plt.subplots(figsize=(7, 5))
